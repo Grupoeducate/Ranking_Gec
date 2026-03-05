@@ -151,21 +151,30 @@
             });
         }
 
-        function toggleSel(dane, el) {
-            if(el.checked) {
-                if(seleccionados.length >= 3) {
-                    alert("Límite alcanzado: Solo puedes comparar hasta 3 colegios a la vez.");
-                    el.checked = false;
-                    return;
-                }
-                seleccionados.push(dataFull.find(x => x.cod_dane === dane));
-            } else {
-                seleccionados = seleccionados.filter(s => s.cod_dane !== dane);
-            }
-            document.getElementById('countSelected').innerText = seleccionados.length;
-            document.getElementById('btnCompararVarios').disabled = seleccionados.length < 2;
+     function toggleSel(dane, el) {
+    if(el.checked) {
+        if(seleccionados.length >= 3) {
+            // Mostrar modal de alerta en lugar de alert()
+            document.getElementById('modalAlerta').classList.remove('hidden');
+            el.checked = false;
+            return;
         }
+        // Buscar el colegio en dataFull y agregarlo a selección
+        const col = dataFull.find(x => x.cod_dane === dane);
+        if(col) seleccionados.push(col);
+    } else {
+        seleccionados = seleccionados.filter(s => s.cod_dane !== dane);
+    }
+    
+    // Actualizar interfaz
+    document.getElementById('countSelected').innerText = seleccionados.length;
+    const btnComp = document.getElementById('btnCompararVarios');
+    btnComp.disabled = seleccionados.length < 2;
+}
 
+function cerrarAlerta() {
+    document.getElementById('modalAlerta').classList.add('hidden');
+}
         async function abrirComparativa() {
             document.getElementById('modalGrafica').classList.remove('hidden');
             const datasets = [];
@@ -227,5 +236,22 @@
         document.getElementById('inputBusqueda').addEventListener('input', filtrar);
         window.onload = cargar;
     </script>
+    <!-- Modal de Alerta Personalizada -->
+<div id="modalAlerta" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-blue-900/40 backdrop-blur-sm p-4">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="p-8 text-center">
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-3xl font-bold">!</span>
+            </div>
+            <h3 class="text-xl font-black text-educate mb-2 uppercase">Límite Alcanzado</h3>
+            <p id="mensajeAlerta" class="text-sm text-slate-500 mb-6">Solo puedes comparar hasta 3 instituciones simultáneamente para garantizar la claridad del análisis pedagógico.</p>
+            <button onclick="cerrarAlerta()" class="w-full bg-educate text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-800 transition-colors shadow-lg">
+                ENTENDIDO
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
+
