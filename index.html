@@ -3,238 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranking Saber 11 - Grupo Edúcate Colombia</title>
+    <title>Dashboard Educativo - Grupo Edúcate Colombia</title>
+    <!-- Librerías Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .bg-educate { background-color: #004aad; }
         .text-educate { color: #004aad; }
-        .hover-row:hover { background-color: #f8fafc; cursor: pointer; }
         .font-numeric { font-family: 'Courier New', Courier, monospace; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { overflow-x: hidden; overflow-y: visible !important; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
-    <header class="bg-educate text-white p-6 shadow-md">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+    <!-- Header Institucional -->
+    <header class="bg-educate text-white p-6 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold italic tracking-tight">Grupo Edúcate Colombia</h1>
-                <p class="text-xs opacity-75 uppercase tracking-widest">Análisis Pedagógico Saber 11</p>
+                <h1 class="text-2xl font-black italic">Grupo Edúcate Colombia</h1>
+                <p class="text-[10px] tracking-[0.2em] opacity-80 uppercase">Director de Pedagogía: Marlon Galviz</p>
             </div>
-            <div class="mt-4 md:mt-0 text-right">
-                <p class="text-sm font-medium">Director: Marlon Galviz</p>
+            <div class="hidden md:block text-right">
+                <span id="statusCarga" class="text-[10px] bg-blue-800 px-3 py-1 rounded-full border border-blue-400">Sistema Activo</span>
             </div>
         </div>
     </header>
 
     <main class="container mx-auto p-4 md:p-6">
-        <!-- Filtros Superiores -->
-        <section class="bg-white p-4 rounded-xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 border border-gray-100">
+        <!-- Panel de Filtros -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 border border-gray-200">
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Año de Prueba</label>
-                <select id="selectAnio" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
+                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Año Principal</label>
+                <select id="selectAnio" class="w-full p-2 border rounded-xl bg-gray-50 text-sm font-bold">
+                    <!-- Dinámico -->
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Departamento</label>
-                <select id="selectDepto" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
-                    <option value="TODOS">Todos</option>
-                </select>
+                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Departamento</label>
+                <select id="selectDepto" class="w-full p-2 border rounded-xl bg-gray-50 text-sm"><option value="TODOS">Cargando...</option></select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Municipio</label>
-                <select id="selectMpio" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
-                    <option value="TODOS">Todos</option>
-                </select>
+                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Municipio</label>
+                <select id="selectMpio" class="w-full p-2 border rounded-xl bg-gray-50 text-sm"><option value="TODOS">Todos</option></select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Categoría ICFES</label>
-                <select id="selectClasif" class="w-full p-2 border rounded-lg bg-gray-50 text-sm">
+                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Categoría</label>
+                <select id="selectClasif" class="w-full p-2 border rounded-xl bg-gray-50 text-sm">
                     <option value="TODOS">Todas</option>
-                    <option value="A+">A+</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
+                    <option value="A+">A+</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                 </select>
             </div>
         </section>
 
         <!-- Buscador -->
-        <div class="mb-6">
-            <input type="text" id="inputBusqueda" placeholder="🔍 Escribe el nombre del colegio o código DANE..." 
-                   class="w-full p-4 border rounded-xl shadow-inner focus:ring-2 focus:ring-blue-500 outline-none text-lg">
+        <div class="mb-6 relative">
+            <input type="text" id="inputBusqueda" placeholder="Buscar institución por nombre o DANE..." 
+                   class="w-full p-5 pl-12 border-none rounded-2xl shadow-lg focus:ring-4 focus:ring-blue-100 text-lg outline-none">
+            <span class="absolute left-4 top-5 text-gray-400 text-xl">🔍</span>
         </div>
 
-        <div id="loading" class="text-center py-10 hidden">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
-            <p class="mt-2 text-gray-500">Procesando datos del ICFES...</p>
+        <!-- Tabla Principal -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-[10px] uppercase text-gray-400 font-bold border-b">
+                        <tr>
+                            <th class="p-5">Institución Educativa</th>
+                            <th class="p-5 text-center">Cat.</th>
+                            <th class="p-5 text-center bg-blue-50 text-blue-600">Total</th>
+                            <th class="p-5 text-center">Mat</th>
+                            <th class="p-5 text-center">Lect</th>
+                            <th class="p-5 text-center">Ing</th>
+                            <th class="p-5 text-center">Tendencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla" class="text-sm divide-y divide-gray-50"></tbody>
+                </table>
+            </div>
         </div>
-
-        <section id="vistaResultados" class="hidden">
-            <!-- Ficha de Detalle -->
-            <div id="fichaColegio" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden">
-                <div class="bg-blue-700 text-white p-5 rounded-xl shadow-md">
-                    <span class="text-[10px] uppercase font-bold opacity-70">Ranking Nacional</span>
-                    <p class="text-3xl font-black" id="rankNac">-</p>
-                </div>
-                <div class="bg-indigo-600 text-white p-5 rounded-xl shadow-md">
-                    <span class="text-[10px] uppercase font-bold opacity-70" id="labelDepto">Ranking Depto</span>
-                    <p class="text-3xl font-black" id="rankDep">-</p>
-                </div>
-                <div class="bg-teal-600 text-white p-5 rounded-xl shadow-md">
-                    <span class="text-[10px] uppercase font-bold opacity-70" id="labelMpio">Ranking Mpio</span>
-                    <p class="text-3xl font-black" id="rankMpio">-</p>
-                </div>
-            </div>
-
-            <!-- Tabla de Datos Completa -->
-            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-100 text-[10px] uppercase text-gray-500 font-bold border-b">
-                            <tr>
-                                <th class="p-4">Institución</th>
-                                <th class="p-4 text-center">Cat.</th>
-                                <th class="p-4 text-center bg-blue-50 text-blue-700">Total</th>
-                                <th class="p-4 text-center">Mat</th>
-                                <th class="p-4 text-center">Lect</th>
-                                <th class="p-4 text-center">Soc</th>
-                                <th class="p-4 text-center">Cien</th>
-                                <th class="p-4 text-center">Ing</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpoTabla" class="text-sm divide-y divide-gray-100">
-                            <!-- Filas dinámicas -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
     </main>
 
-    <script>
-        let dataGlobal = [];
-        let dataFiltrada = [];
+    <!-- Modal de Gráfica -->
+    <div id="modalGrafica" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="p-6 bg-gray-50 border-b flex justify-between items-center">
+                <div>
+                    <h2 id="modalNombre" class="text-xl font-bold text-educate uppercase">Nombre del Colegio</h2>
+                    <p id="modalDane" class="text-[10px] text-gray-500 font-mono"></p>
+                </div>
+                <button onclick="cerrarModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+            </div>
+            <div class="p-8">
+                <canvas id="chartHistorico" height="150"></canvas>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button id="btnExportar" class="bg-emerald-600 text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 shadow-md">
+                        📥 Exportar Gráfica (.png)
+                    </button>
+                    <button onclick="cerrarModal()" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-xl text-xs font-bold hover:bg-gray-300">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        async function cargarDatos() {
-            const anio = document.getElementById('selectAnio').value;
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('vistaResultados').classList.add('hidden');
-            
+    <script>
+        const aniosDisponibles = Array.from({length: 12}, (_, i) => 2014 + i);
+        let dataActual = [];
+        let dataFiltrada = [];
+        let myChart = null;
+
+        // Inicializar Selector de Años
+        const selAnio = document.getElementById('selectAnio');
+        aniosDisponibles.reverse().forEach(a => selAnio.innerHTML += `<option value="${a}">${a}</option>`);
+
+        async function cargarPrincipal() {
+            const anio = selAnio.value;
             try {
-                const respuesta = await fetch(`./data/data_${anio}.json`);
-                dataGlobal = await respuesta.json();
-                llenarSelectsTerritorio();
-                aplicarFiltros();
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('vistaResultados').classList.remove('hidden');
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Verifica que el archivo ./data/data_" + anio + ".json exista.");
+                const res = await fetch(`./data/data_${anio}.json`);
+                dataActual = await res.json();
+                llenarDeptos();
+                filtrar();
+            } catch (e) {
+                alert(`Error: No se encontró data_${anio}.json en la carpeta /data/`);
             }
         }
 
-        function llenarSelectsTerritorio() {
-            const deptos = [...new Set(dataGlobal.map(d => d.departamento))].sort();
-            const selectDepto = document.getElementById('selectDepto');
-            selectDepto.innerHTML = '<option value="TODOS">Todos</option>';
-            deptos.forEach(d => selectDepto.innerHTML += `<option value="${d}">${d}</option>`);
+        function llenarDeptos() {
+            const dptos = [...new Set(dataActual.map(d => d.departamento))].sort();
+            const sD = document.getElementById('selectDepto');
+            sD.innerHTML = '<option value="TODOS">Todos</option>';
+            dptos.forEach(d => sD.innerHTML += `<option value="${d}">${d}</option>`);
         }
 
-        function actualizarMunicipios() {
-            const deptoSel = document.getElementById('selectDepto').value;
-            const mpios = [...new Set(dataGlobal.filter(d => deptoSel === 'TODOS' || d.departamento === deptoSel).map(d => d.municipio))].sort();
-            const selectMpio = document.getElementById('selectMpio');
-            selectMpio.innerHTML = '<option value="TODOS">Todos</option>';
-            mpios.forEach(m => selectMpio.innerHTML += `<option value="${m}">${m}</option>`);
-            aplicarFiltros();
-        }
-
-        function aplicarFiltros() {
+        function actualizarMpios() {
             const depto = document.getElementById('selectDepto').value;
-            const mpio = document.getElementById('selectMpio').value;
-            const clasif = document.getElementById('selectClasif').value;
-            const busq = document.getElementById('inputBusqueda').value.toLowerCase();
-
-            dataFiltrada = dataGlobal.filter(d => {
-                const mD = depto === 'TODOS' || d.departamento === depto;
-                const mM = mpio === 'TODOS' || d.municipio === mpio;
-                const mC = clasif === 'TODOS' || d.clasificacion === clasif;
-                const mB = d.nombre.toLowerCase().includes(busq) || d.cod_dane.includes(busq);
-                return mD && mM && mC && mB;
-            });
-            dibujarTabla();
+            const mpios = [...new Set(dataActual.filter(d => depto === 'TODOS' || d.departamento === depto).map(d => d.municipio))].sort();
+            const sM = document.getElementById('selectMpio');
+            sM.innerHTML = '<option value="TODOS">Todos</option>';
+            mpios.forEach(m => sM.innerHTML += `<option value="${m}">${m}</option>`);
+            filtrar();
         }
 
-        function dibujarTabla(resaltado = null) {
-            const cuerpo = document.getElementById('cuerpoTabla');
-            cuerpo.innerHTML = '';
-            
-            // Limitamos a 50 para rapidez visual
-            dataFiltrada.slice(0, 50).forEach(d => {
-                const esR = resaltado && d.cod_dane === resaltado.cod_dane;
-                
-                // Mapeo de claves exactas de tu JSON
-                const total = parseFloat(d.indice_total || 0).toFixed(4);
-                const mat = parseFloat(d["indice de Matemática"] || 0).toFixed(4);
-                const lec = parseFloat(d["indice de Lectura Crítica"] || 0).toFixed(4);
-                const soc = parseFloat(d["indice de Sociales y Ciudadanas"] || 0).toFixed(4);
-                const cie = parseFloat(d["indice de Ciencias Naturales"] || 0).toFixed(4);
-                const ing = parseFloat(d["indice de Inglés"] || 0).toFixed(4);
+        function filtrar() {
+            const dep = document.getElementById('selectDepto').value;
+            const mpi = document.getElementById('selectMpio').value;
+            const cla = document.getElementById('selectClasif').value;
+            const bus = document.getElementById('inputBusqueda').value.toLowerCase();
 
-                cuerpo.innerHTML += `
-                    <tr class="hover-row ${esR ? 'bg-yellow-50 border-l-4 border-yellow-500 font-bold' : ''}" 
-                        onclick="verDetalle('${d.cod_dane}')">
-                        <td class="p-4">
-                            <div class="text-blue-800 font-bold uppercase text-[11px]">${d.nombre}</div>
-                            <div class="text-[10px] text-gray-400">${d.municipio} | Puesto #${d.ranking_nacional}</div>
+            dataFiltrada = dataActual.filter(d => {
+                return (dep === 'TODOS' || d.departamento === dep) &&
+                       (mpi === 'TODOS' || d.municipio === mpi) &&
+                       (cla === 'TODOS' || d.clasificacion === cla) &&
+                       (d.nombre.toLowerCase().includes(bus) || d.cod_dane.includes(bus));
+            });
+            dibujar();
+        }
+
+        function dibujar() {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = '';
+            dataFiltrada.slice(0, 100).forEach(d => {
+                const indT = parseFloat(d.indice_total || 0).toFixed(4);
+                const indM = parseFloat(d["indice de Matemática"] || 0).toFixed(4);
+                const indL = parseFloat(d["indice de Lectura Crítica"] || 0).toFixed(4);
+                const indI = parseFloat(d["indice de Inglés"] || 0).toFixed(4);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-blue-50 transition-colors">
+                        <td class="p-5">
+                            <div class="text-[11px] font-black text-educate uppercase">${d.nombre}</div>
+                            <div class="text-[9px] text-gray-400">Puesto Nacional #${d.ranking_nacional} | DANE: ${d.cod_dane}</div>
                         </td>
-                        <td class="p-4 text-center font-bold text-gray-500">${d.clasificacion}</td>
-                        <td class="p-4 text-center font-numeric font-bold bg-blue-50 text-blue-700">${total}</td>
-                        <td class="p-4 text-center font-numeric text-gray-600">${mat}</td>
-                        <td class="p-4 text-center font-numeric text-gray-600">${lec}</td>
-                        <td class="p-4 text-center font-numeric text-gray-600">${soc}</td>
-                        <td class="p-4 text-center font-numeric text-gray-600">${cie}</td>
-                        <td class="p-4 text-center font-numeric text-gray-600">${ing}</td>
+                        <td class="p-5 text-center font-bold text-gray-400">${d.clasificacion}</td>
+                        <td class="p-5 text-center font-numeric font-black bg-blue-50 text-blue-700">${indT}</td>
+                        <td class="p-5 text-center text-[11px] font-numeric">${d.evaluados_3anios}</td>
+                        <td class="p-5 text-center text-[11px] font-numeric text-gray-500">${indL}</td>
+                        <td class="p-5 text-center text-[11px] font-numeric text-gray-500">${indI}</td>
+                        <td class="p-5 text-center">
+                            <button onclick="verTendencia('${d.cod_dane}', '${d.nombre}')" class="bg-gray-100 hover:bg-blue-600 hover:text-white p-2 rounded-lg transition-all">
+                                📈
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        function verDetalle(dane) {
-            const col = dataGlobal.find(d => d.cod_dane === dane);
-            if(!col) return;
-
-            const ficha = document.getElementById('fichaColegio');
-            ficha.classList.remove('hidden');
-            document.getElementById('rankNac').innerText = `#${col.ranking_nacional}`;
-            document.getElementById('rankDep').innerText = `#${col.ranking_departamento}`;
-            document.getElementById('rankMpio').innerText = `#${col.ranking_municipio}`;
-            document.getElementById('labelDepto').innerText = `Puesto en ${col.departamento}`;
-            document.getElementById('labelMpio').innerText = `Puesto en ${col.municipio}`;
-
-            if(confirm(`¿Comparar ${col.nombre} con los mejores de ${col.municipio}?`)) {
-                document.getElementById('selectDepto').value = col.departamento;
-                actualizarMunicipios();
-                document.getElementById('selectMpio').value = col.municipio;
-                document.getElementById('selectClasif').value = 'TODOS';
-                document.getElementById('inputBusqueda').value = '';
-                aplicarFiltros();
-                dibujarTabla(col);
-                window.scrollTo({ top: 300, behavior: 'smooth' });
+        async function verTendencia(dane, nombre) {
+            document.getElementById('modalNombre').innerText = nombre;
+            document.getElementById('modalDane').innerText = `HISTÓRICO DANE: ${dane}`;
+            document.getElementById('modalGrafica').classList.remove('hidden');
+            
+            // Carga Histórica Multi-JSON
+            const historico = [];
+            for (let a of aniosDisponibles.sort()) {
+                try {
+                    const res = await fetch(`./data/data_${a}.json`);
+                    const data = await res.json();
+                    const col = data.find(c => c.cod_dane === dane);
+                    historico.push(col ? parseFloat(col.indice_total) : null);
+                } catch(e) { historico.push(null); }
             }
+
+            renderChart(historico);
         }
 
-        // Eventos
-        document.getElementById('selectAnio').addEventListener('change', cargarDatos);
-        document.getElementById('selectDepto').addEventListener('change', actualizarMunicipios);
-        document.getElementById('selectMpio').addEventListener('change', aplicarFiltros);
-        document.getElementById('selectClasif').addEventListener('change', aplicarFiltros);
-        document.getElementById('inputBusqueda').addEventListener('input', aplicarFiltros);
+        function renderChart(valores) {
+            const ctx = document.getElementById('chartHistorico').getContext('2d');
+            if(myChart) myChart.destroy();
 
-        window.onload = cargarDatos;
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: aniosDisponibles.sort(),
+                    datasets: [{
+                        label: 'Índice Total Histórico',
+                        data: valores,
+                        borderColor: '#004aad',
+                        backgroundColor: 'rgba(0, 74, 173, 0.1)',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#fff',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: false, grid: { color: '#f1f1f1' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalGrafica').classList.add('hidden');
+        }
+
+        document.getElementById('btnExportar').onclick = () => {
+            const link = document.createElement('a');
+            link.download = `Tendencia_${document.getElementById('modalNombre').innerText}.png`;
+            link.href = document.getElementById('chartHistorico').toDataURL('image/png');
+            link.click();
+        };
+
+        // Eventos
+        selAnio.addEventListener('change', cargarPrincipal);
+        document.getElementById('selectDepto').addEventListener('change', actualizarMpios);
+        document.getElementById('selectMpio').addEventListener('change', filtrar);
+        document.getElementById('selectClasif').addEventListener('change', filtrar);
+        document.getElementById('inputBusqueda').addEventListener('input', filtrar);
+
+        window.onload = cargarPrincipal;
     </script>
 </body>
 </html>
