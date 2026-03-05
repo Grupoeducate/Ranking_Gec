@@ -9,7 +9,7 @@
     <style>
         .bg-educate { background-color: #004aad; }
         .text-educate { color: #004aad; }
-        .truncate-school { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .truncate-school { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .font-numeric { font-family: 'Courier New', monospace; }
         .btn-compare { transition: all 0.3s ease; }
         .btn-compare:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -129,27 +129,56 @@
             dibujar(filtered);
         }
 
-        function dibujar(data) {
-            const tbody = document.getElementById('cuerpoTabla');
-            tbody.innerHTML = '';
-            data.slice(0, 100).forEach(x => {
-                const isChecked = seleccionados.find(s => s.cod_dane === x.cod_dane);
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-all">
-                        <td class="p-5 text-center"><input type="checkbox" ${isChecked?'checked':''} onchange="toggleSel('${x.cod_dane}', this)" class="w-4 h-4 rounded border-slate-300"></td>
-                        <td class="p-5"><div class="text-base font-black text-educate truncate-school uppercase">${x.nombre}</div><div class="text-[9px] text-slate-400 font-bold tracking-tighter">DANE: ${x.cod_dane} | #${x.ranking_nacional} Nal.</div></td>
-                        <td class="p-5 text-center font-bold text-slate-400">${x.clasificacion}</td>
-                        <td class="p-5 text-center font-numeric font-black bg-blue-50/50 text-blue-700">${parseFloat(x.indice_total).toFixed(4)}</td>
-                        <td class="p-5 text-center font-numeric text-slate-500">${x.evaluados_3anios}</td>
-                        <td class="p-5 text-center font-numeric text-slate-400">${parseFloat(x["indice de Lectura Crítica"]||0).toFixed(4)}</td>
-                        <td class="p-5 text-center font-numeric text-slate-400">${parseFloat(x["indice de Sociales y Ciudadanas"]||0).toFixed(4)}</td>
-                        <td class="p-5 text-center font-numeric text-slate-400">${parseFloat(x["indice de Ciencias Naturales"]||0).toFixed(4)}</td>
-                        <td class="p-5 text-center font-numeric text-slate-400">${parseFloat(x["indice de Inglés"]||0).toFixed(4)}</td>
-                        <td class="p-5 text-center"><button onclick="verHistorial('${x.cod_dane}', '${x.nombre}')" class="text-lg">📈</button></td>
-                    </tr>
-                `;
-            });
-        }
+      function dibujar(data) {
+    const tbody = document.getElementById('cuerpoTabla');
+    tbody.innerHTML = '';
+    
+    // Mostramos los primeros 100 resultados para mantener fluidez
+    data.slice(0, 100).forEach(x => {
+        const isChecked = seleccionados.find(s => s.cod_dane === x.cod_dane);
+        
+        // Formateo de índices con 4 decimales para precisión pedagógica
+        const indT = parseFloat(x.indice_total || 0).toFixed(4);
+        const indM = parseFloat(x["indice de Matemática"] || 0).toFixed(4);
+        const indL = parseFloat(x["indice de Lectura Crítica"] || 0).toFixed(4);
+        const indS = parseFloat(x["indice de Sociales y Ciudadanas"] || 0).toFixed(4);
+        const indC = parseFloat(x["indice de Ciencias Naturales"] || 0).toFixed(4);
+        const indI = parseFloat(x["indice de Inglés"] || 0).toFixed(4);
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
+                <td class="p-5 text-center">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                           onchange="toggleSel('${x.cod_dane}', this)" 
+                           class="w-5 h-5 rounded border-slate-300 accent-blue-600 cursor-pointer">
+                </td>
+                <td class="p-5">
+                    <!-- NOMBRE: Más pequeño y en gris para jerarquía secundaria -->
+                    <div class="text-[11px] font-bold text-slate-400 uppercase truncate-school mb-1 leading-tight">
+                        ${x.nombre}
+                    </div>
+                    <!-- DANE Y PUESTO: Más grandes y destacados en azul institucional -->
+                    <div class="text-sm font-black text-educate tracking-tighter uppercase">
+                        DANE: ${x.cod_dane} | PUESTO NAL. #${x.ranking_nacional}
+                    </div>
+                </td>
+                <td class="p-5 text-center font-bold text-slate-500">${x.clasificacion}</td>
+                <td class="p-5 text-center font-numeric font-black bg-blue-50/50 text-blue-700 text-base">${indT}</td>
+                <td class="p-5 text-center font-numeric text-slate-500 text-xs">${x.evaluados_3anios}</td>
+                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indL}</td>
+                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indS}</td>
+                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indC}</td>
+                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indI}</td>
+                <td class="p-5 text-center">
+                    <button onclick="verHistorial('${x.cod_dane}', '${x.nombre}')" 
+                            class="bg-slate-100 hover:bg-blue-600 hover:text-white p-2 rounded-xl transition-all shadow-sm">
+                        📈
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
 
      function toggleSel(dane, el) {
     if(el.checked) {
@@ -254,4 +283,5 @@ function cerrarAlerta() {
 
 </body>
 </html>
+
 
