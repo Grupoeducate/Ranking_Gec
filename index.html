@@ -135,7 +135,7 @@
             
             try {
                 // RUTA: Asegúrate que tus archivos estén en una carpeta 'data/'
-                const respuesta = await fetch(`./data/data_${anio}.json`);
+                const respuesta = await fetch(`data/data_${anio}.json`);
                 dataGlobal = await respuesta.json();
                 
                 llenarSelectsTerritorio();
@@ -258,3 +258,4 @@
     </script>
 </body>
 </html>
+
