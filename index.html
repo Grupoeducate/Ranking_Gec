@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Rankings Saber 11 - Grupo Edúcate</title>
+    <!-- Tailwind CSS para diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-stats { transition: transform 0.2s; }
+        .card-stats:hover { transform: translateY(-5px); }
+        .bg-educate { background-color: #004aad; } /* Azul institucional sugerido */
+        .text-educate { color: #004aad; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Header -->
+    <header class="bg-educate text-white p-6 shadow-lg">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold italic">Grupo Edúcate Colombia</h1>
+            <p class="text-sm opacity-80">Director de Pedagogía: Marlon Galviz</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- Panel de Filtros -->
+        <section class="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Año de Consulta</label>
+                <select id="selectAnio" class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Departamento</label>
+                <select id="selectDepto" class="w-full p-2 border rounded-lg bg-gray-50">
+                    <option value="TODOS">Todos los departamentos</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Municipio</label>
+                <select id="selectMpio" class="w-full p-2 border rounded-lg bg-gray-50">
+                    <option value="TODOS">Todos los municipios</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Categoría (D a A+)</label>
+                <select id="selectClasif" class="w-full p-2 border rounded-lg bg-gray-50">
+                    <option value="TODOS">Todas las categorías</option>
+                    <option value="A+">A+</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Buscador Directo -->
+        <section class="mb-8">
+            <input type="text" id="inputBusqueda" placeholder="Buscar colegio por nombre o código DANE..." 
+                   class="w-full p-4 text-lg border-2 border-blue-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none">
+        </section>
+
+        <!-- Resultados y Tabla -->
+        <div id="loading" class="text-center py-10 hidden">
+            <p class="text-xl animate-pulse">Cargando datos...</p>
+        </div>
+
+        <section id="vistaResultados" class="hidden">
+            <!-- Tarjetas de Resumen (Se activa al elegir un colegio) -->
+            <div id="fichaColegio" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
+                <div class="bg-blue-600 text-white p-6 rounded-2xl card-stats shadow-lg">
+                    <h3 class="text-sm uppercase tracking-wider opacity-80">Puesto Nacional</h3>
+                    <p class="text-4xl font-bold" id="rankNac">-</p>
+                </div>
+                <div class="bg-indigo-600 text-white p-6 rounded-2xl card-stats shadow-lg">
+                    <h3 class="text-sm uppercase tracking-wider opacity-80" id="labelDepto">Puesto Depto</h3>
+                    <p class="text-4xl font-bold" id="rankDep">-</p>
+                </div>
+                <div class="bg-emerald-600 text-white p-6 rounded-2xl card-stats shadow-lg">
+                    <h3 class="text-sm uppercase tracking-wider opacity-80" id="labelMpio">Puesto Mpio</h3>
+                    <p class="text-4xl font-bold" id="rankMpio">-</p>
+                </div>
+            </div>
+
+            <!-- Tabla de Datos -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-4 bg-gray-100 flex justify-between items-center border-b">
+                    <h2 class="font-bold text-gray-700" id="tablaTitulo">Listado de Instituciones</h2>
+                    <span id="contadorResultados" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">0 colegios</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4 font-semibold text-gray-600">Colegio</th>
+                                <th class="p-4 font-semibold text-gray-600">Municipio</th>
+                                <th class="p-4 font-semibold text-gray-600">Cat.</th>
+                                <th class="p-4 font-semibold text-gray-600 text-center">Índice Total</th>
+                                <th class="p-4 font-semibold text-gray-600 text-center">Mat.</th>
+                                <th class="p-4 font-semibold text-gray-600 text-center">Puesto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTabla" class="divide-y divide-gray-100">
+                            <!-- JS insertará filas aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let dataGlobal = [];
+        let dataFiltrada = [];
+
+        // Elementos DOM
+        const selectAnio = document.getElementById('selectAnio');
+        const selectDepto = document.getElementById('selectDepto');
+        const selectMpio = document.getElementById('selectMpio');
+        const selectClasif = document.getElementById('selectClasif');
+        const inputBusqueda = document.getElementById('inputBusqueda');
+        const cuerpoTabla = document.getElementById('cuerpoTabla');
+        const vistaResultados = document.getElementById('vistaResultados');
+        const fichaColegio = document.getElementById('fichaColegio');
+
+        // Cargar JSON según el año
+        async function cargarDatos() {
+            const anio = selectAnio.value;
+            document.getElementById('loading').classList.remove('hidden');
+            vistaResultados.classList.add('hidden');
+            
+            try {
+                // RUTA: Asegúrate que tus archivos estén en una carpeta 'data/'
+                const respuesta = await fetch(`./data/data_${anio}.json`);
+                dataGlobal = await respuesta.json();
+                
+                llenarSelectsTerritorio();
+                aplicarFiltros();
+                
+                document.getElementById('loading').classList.add('hidden');
+                vistaResultados.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error cargando el JSON:", error);
+                alert("No se encontró el archivo data_" + anio + ".json en la carpeta /data/");
+            }
+        }
+
+        function llenarSelectsTerritorio() {
+            const deptos = [...new Set(dataGlobal.map(d => d.departamento))].sort();
+            selectDepto.innerHTML = '<option value="TODOS">Todos los departamentos</option>';
+            deptos.forEach(d => selectDepto.innerHTML += `<option value="${d}">${d}</option>`);
+        }
+
+        function actualizarMunicipios() {
+            const deptoSel = selectDepto.value;
+            const mpios = [...new Set(dataGlobal.filter(d => deptoSel === 'TODOS' || d.departamento === deptoSel).map(d => d.municipio))].sort();
+            selectMpio.innerHTML = '<option value="TODOS">Todos los municipios</option>';
+            mpios.forEach(m => selectMpio.innerHTML += `<option value="${m}">${m}</option>`);
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const depto = selectDepto.value;
+            const mpio = selectMpio.value;
+            const clasif = selectClasif.value;
+            const busqueda = inputBusqueda.value.toLowerCase();
+
+            dataFiltrada = dataGlobal.filter(d => {
+                const matchDepto = depto === 'TODOS' || d.departamento === depto;
+                const matchMpio = mpio === 'TODOS' || d.municipio === mpio;
+                const matchClasif = clasif === 'TODOS' || d.clasificacion === clasif;
+                const matchBusq = d.nombre.toLowerCase().includes(busqueda) || d.cod_dane.includes(busqueda);
+                return matchDepto && matchMpio && matchClasif && matchBusq;
+            });
+
+            dibujarTabla();
+        }
+
+        function dibujarTabla(colegioResaltado = null) {
+            cuerpoTabla.innerHTML = '';
+            document.getElementById('contadorResultados').innerText = `${dataFiltrada.length} colegios`;
+            
+            // Si hay un colegio resaltado (búsqueda directa), lo ponemos de primero o filtramos "quiénes están arriba"
+            let listaAMostrar = dataFiltrada.slice(0, 100); // Mostrar top 100 para rendimiento
+
+            listaAMostrar.forEach(d => {
+                const esResaltado = colegioResaltado && d.cod_dane === colegioResaltado.cod_dane;
+                const fila = `
+                    <tr class="${esResaltado ? 'bg-yellow-50 font-bold border-l-4 border-yellow-400' : 'hover:bg-gray-50'} cursor-pointer" 
+                        onclick="verDetalleColegio('${d.cod_dane}')">
+                        <td class="p-4">
+                            <div class="text-sm font-bold text-educate">${d.nombre}</div>
+                            <div class="text-xs text-gray-500">DANE: ${d.cod_dane} | ${d.sector}</div>
+                        </td>
+                        <td class="p-4 text-sm text-gray-600">${d.municipio} (${d.departamento})</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${getClaseClasif(d.clasificacion)}">${d.clasificacion}</span>
+                        </td>
+                        <td class="p-4 text-center font-mono text-blue-600">${d.indice_total.toFixed(4)}</td>
+                        <td class="p-4 text-center text-sm">${d.indice_matematicas.toFixed(2)}</td>
+                        <td class="p-4 text-center font-bold text-gray-700">#${d.ranking_nacional}</td>
+                    </tr>
+                `;
+                cuerpoTabla.innerHTML += fila;
+            });
+        }
+
+        function getClaseClasif(cat) {
+            if(cat === 'A+') return 'bg-purple-100 text-purple-700';
+            if(cat === 'A') return 'bg-green-100 text-green-700';
+            if(cat === 'B') return 'bg-blue-100 text-blue-700';
+            return 'bg-gray-100 text-gray-600';
+        }
+
+        function verDetalleColegio(dane) {
+            const col = dataGlobal.find(d => d.cod_dane === dane);
+            if(!col) return;
+
+            fichaColegio.classList.remove('hidden');
+            document.getElementById('rankNac').innerText = col.ranking_nacional;
+            document.getElementById('rankDep').innerText = col.ranking_departamento;
+            document.getElementById('rankMpio').innerText = col.ranking_municipio;
+            document.getElementById('labelDepto').innerText = `Puesto en ${col.departamento}`;
+            document.getElementById('labelMpio').innerText = `Puesto en ${col.municipio}`;
+
+            // Acción especial: Mostrar quienes están arriba en su municipio
+            if(confirm(`¿Deseas ver qué instituciones están por encima de ${col.nombre} en ${col.municipio}?`)) {
+                selectDepto.value = col.departamento;
+                actualizarMunicipios();
+                selectMpio.value = col.municipio;
+                selectClasif.value = 'TODOS';
+                inputBusqueda.value = '';
+                
+                dataFiltrada = dataGlobal.filter(d => 
+                    d.departamento === col.departamento && 
+                    d.municipio === col.municipio && 
+                    d.indice_total >= col.indice_total
+                ).sort((a,b) => b.indice_total - a.indice_total);
+
+                dibujarTabla(col);
+                window.scrollTo({ top: 400, behavior: 'smooth' });
+            }
+        }
+
+        // Event Listeners
+        selectAnio.addEventListener('change', cargarDatos);
+        selectDepto.addEventListener('change', actualizarMunicipios);
+        selectMpio.addEventListener('change', aplicarFiltros);
+        selectClasif.addEventListener('change', aplicarFiltros);
+        inputBusqueda.addEventListener('input', aplicarFiltros);
+
+        // Inicio
+        cargarDatos();
+    </script>
+</body>
+</html>
