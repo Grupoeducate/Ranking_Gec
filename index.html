@@ -180,35 +180,38 @@
             dibujarTabla();
         }
 
-        function dibujarTabla(colegioResaltado = null) {
-            cuerpoTabla.innerHTML = '';
-            document.getElementById('contadorResultados').innerText = `${dataFiltrada.length} colegios`;
-            
-            // Si hay un colegio resaltado (búsqueda directa), lo ponemos de primero o filtramos "quiénes están arriba"
-            let listaAMostrar = dataFiltrada.slice(0, 100); // Mostrar top 100 para rendimiento
+      function dibujarTabla(colegioResaltado = null) {
+    cuerpoTabla.innerHTML = '';
+    document.getElementById('contadorResultados').innerText = `${dataFiltrada.length} colegios`;
+    
+    let listaAMostrar = dataFiltrada.slice(0, 100);
 
-            listaAMostrar.forEach(d => {
-                const esResaltado = colegioResaltado && d.cod_dane === colegioResaltado.cod_dane;
-                const fila = `
-                    <tr class="${esResaltado ? 'bg-yellow-50 font-bold border-l-4 border-yellow-400' : 'hover:bg-gray-50'} cursor-pointer" 
-                        onclick="verDetalleColegio('${d.cod_dane}')">
-                        <td class="p-4">
-                            <div class="text-sm font-bold text-educate">${d.nombre}</div>
-                            <div class="text-xs text-gray-500">DANE: ${d.cod_dane} | ${d.sector}</div>
-                        </td>
-                        <td class="p-4 text-sm text-gray-600">${d.municipio} (${d.departamento})</td>
-                        <td class="p-4 text-center">
-                            <span class="px-2 py-1 rounded text-xs font-bold ${getClaseClasif(d.clasificacion)}">${d.clasificacion}</span>
-                        </td>
-                        <td class="p-4 text-center font-mono text-blue-600">${d.indice_total.toFixed(4)}</td>
-                        <td class="p-4 text-center text-sm">${d.indice_matematicas.toFixed(2)}</td>
-                        <td class="p-4 text-center font-bold text-gray-700">#${d.ranking_nacional}</td>
-                    </tr>
-                `;
-                cuerpoTabla.innerHTML += fila;
-            });
-        }
+    listaAMostrar.forEach(d => {
+        const esResaltado = colegioResaltado && d.cod_dane === colegioResaltado.cod_dane;
+        
+        // CORRECCIÓN: Usamos las claves exactas de tu JSON
+        const indTotal = parseFloat(d.indice_total) || 0;
+        const indMat = parseFloat(d["indice de Matemática"]) || 0; // Acceso con corchetes por el espacio
 
+        const fila = `
+            <tr class="${esResaltado ? 'bg-yellow-50 font-bold border-l-4 border-yellow-400' : 'hover:bg-gray-50'} cursor-pointer" 
+                onclick="verDetalleColegio('${d.cod_dane}')">
+                <td class="p-4">
+                    <div class="text-sm font-bold text-educate">${d.nombre}</div>
+                    <div class="text-xs text-gray-500">DANE: ${d.cod_dane} | ${d.sector}</div>
+                </td>
+                <td class="p-4 text-sm text-gray-600">${d.municipio} (${d.departamento})</td>
+                <td class="p-4 text-center">
+                    <span class="px-2 py-1 rounded text-xs font-bold ${getClaseClasif(d.clasificacion)}">${d.clasificacion}</span>
+                </td>
+                <td class="p-4 text-center font-mono text-blue-600">${indTotal.toFixed(4)}</td>
+                <td class="p-4 text-center text-sm">${indMat.toFixed(4)}</td>
+                <td class="p-4 text-center font-bold text-gray-700">#${d.ranking_nacional}</td>
+            </tr>
+        `;
+        cuerpoTabla.innerHTML += fila;
+    });
+}
         function getClaseClasif(cat) {
             if(cat === 'A+') return 'bg-purple-100 text-purple-700';
             if(cat === 'A') return 'bg-green-100 text-green-700';
@@ -216,36 +219,34 @@
             return 'bg-gray-100 text-gray-600';
         }
 
-        function verDetalleColegio(dane) {
-            const col = dataGlobal.find(d => d.cod_dane === dane);
-            if(!col) return;
+      function verDetalleColegio(dane) {
+    const col = dataGlobal.find(d => d.cod_dane === dane);
+    if(!col) return;
 
-            fichaColegio.classList.remove('hidden');
-            document.getElementById('rankNac').innerText = col.ranking_nacional;
-            document.getElementById('rankDep').innerText = col.ranking_departamento;
-            document.getElementById('rankMpio').innerText = col.ranking_municipio;
-            document.getElementById('labelDepto').innerText = `Puesto en ${col.departamento}`;
-            document.getElementById('labelMpio').innerText = `Puesto en ${col.municipio}`;
+    fichaColegio.classList.remove('hidden');
+    document.getElementById('rankNac').innerText = col.ranking_nacional;
+    document.getElementById('rankDep').innerText = col.ranking_departamento;
+    document.getElementById('rankMpio').innerText = col.ranking_municipio;
+    document.getElementById('labelDepto').innerText = `Puesto en ${col.departamento}`;
+    document.getElementById('labelMpio').innerText = `Puesto en ${col.municipio}`;
 
-            // Acción especial: Mostrar quienes están arriba en su municipio
-            if(confirm(`¿Deseas ver qué instituciones están por encima de ${col.nombre} en ${col.municipio}?`)) {
-                selectDepto.value = col.departamento;
-                actualizarMunicipios();
-                selectMpio.value = col.municipio;
-                selectClasif.value = 'TODOS';
-                inputBusqueda.value = '';
-                
-                dataFiltrada = dataGlobal.filter(d => 
-                    d.departamento === col.departamento && 
-                    d.municipio === col.municipio && 
-                    d.indice_total >= col.indice_total
-                ).sort((a,b) => b.indice_total - a.indice_total);
+    if(confirm(`¿Deseas ver qué instituciones están por encima de ${col.nombre} en ${col.municipio}?`)) {
+        selectDepto.value = col.departamento;
+        actualizarMunicipios();
+        selectMpio.value = col.municipio;
+        selectClasif.value = 'TODOS';
+        inputBusqueda.value = '';
+        
+        dataFiltrada = dataGlobal.filter(d => 
+            d.departamento === col.departamento && 
+            d.municipio === col.municipio && 
+            parseFloat(d.indice_total) >= parseFloat(col.indice_total)
+        ).sort((a,b) => parseFloat(b.indice_total) - parseFloat(a.indice_total));
 
-                dibujarTabla(col);
-                window.scrollTo({ top: 400, behavior: 'smooth' });
-            }
-        }
-
+        dibujarTabla(col);
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+    }
+}
         // Event Listeners
         selectAnio.addEventListener('change', cargarDatos);
         selectDepto.addEventListener('change', actualizarMunicipios);
@@ -258,4 +259,5 @@
     </script>
 </body>
 </html>
+
 
