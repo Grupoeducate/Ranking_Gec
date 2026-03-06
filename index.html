@@ -3,285 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparativa Educativa - Dirección de Pedagogía</title>
+    <title>Panel de Consulta Saber 11 - Dirección de Pedagogía</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .bg-educate { background-color: #004aad; }
         .text-educate { color: #004aad; }
         .truncate-school { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .font-numeric { font-family: 'Courier New', monospace; }
-        .btn-compare { transition: all 0.3s ease; }
-        .btn-compare:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
-    <header class="bg-educate text-white p-6 shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-black">Grupo Edúcate Colombia</h1>
-                <p class="text-[10px] tracking-widest opacity-80 uppercase">Dirección de Pedagogía</p>
-            </div>
-            <button id="btnCompararVarios" disabled onclick="abrirComparativa()" 
-                    class="btn-compare bg-yellow-500 text-blue-900 px-6 py-2 rounded-full font-bold text-xs shadow-md hover:bg-yellow-400">
-                Comparar Selección (<span id="countSelected">0</span>)
-            </button>
+<header class="bg-educate text-white p-6 shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black">Grupo Edúcate Colombia</h1>
+            <p class="text-[10px] tracking-widest opacity-80 uppercase">Dirección de Pedagogía</p>
         </div>
-    </header>
+        <button id="btnCompararVarios" disabled
+                class="bg-yellow-500 text-blue-900 px-6 py-2 rounded-full font-bold text-xs shadow-md hover:bg-yellow-400">
+            Comparar Selección (<span id="countSelected">0</span>)
+        </button>
+    </div>
+</header>
 
-    <main class="container mx-auto p-4 md:p-6">
-        <!-- Filtros -->
-        <section class="bg-white p-6 rounded-3xl shadow-sm mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 border border-slate-100">
+<main class="container mx-auto p-4 md:p-6">
+
+    <!-- PANEL DE CONSULTA -->
+    <section class="bg-white p-6 rounded-3xl shadow-sm mb-6 border border-slate-100">
+        <h2 class="text-sm font-bold text-slate-500 uppercase mb-4 tracking-widest">Panel de Consulta</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <!-- Año -->
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Año de Referencia</label>
-                <select id="selectAnio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm font-bold"></select>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Año</label>
+                <select id="selectAnio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm font-bold">
+                    <option value="TODOS">Todos</option>
+                    <!-- Años específicos (ejemplo, el JS puede completar) -->
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <!-- ... -->
+                    <option value="2014">2014</option>
+                </select>
+                <p class="text-[10px] text-slate-400 mt-1">
+                    Selecciona “Todos” para activar el modo histórico por DANE.
+                </p>
             </div>
+
+            <!-- Departamento -->
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Departamento</label>
-                <select id="selectDepto" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm"><option value="TODOS">Todos</option></select>
+                <select id="selectDepto" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
+                    <option value="TODOS">Todos</option>
+                </select>
             </div>
+
+            <!-- Municipio -->
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Municipio</label>
-                <select id="selectMpio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm"><option value="TODOS">Todos</option></select>
+                <select id="selectMpio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
+                    <option value="TODOS">Todos</option>
+                </select>
             </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Buscador</label>
-                <input type="text" id="inputBusqueda" placeholder="Nombre o DANE..." class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
-            </div>
-        </section>
 
-        <!-- Tabla -->
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b">
-                        <tr>
-                            <th class="p-5 text-center w-12">Sel.</th>
-                            <th class="p-5">Institución Educativa</th>
-                            <th class="p-5 text-center">Cat.</th>
-                            <th class="p-5 text-center bg-blue-50 text-blue-600">Total</th>
-                            <th class="p-5 text-center">Mat</th>
-                            <th class="p-5 text-center">Lect</th>
-                            <th class="p-5 text-center">Soc</th>
-                            <th class="p-5 text-center">Cien</th>
-                            <th class="p-5 text-center">Ing</th>
-                            <th class="p-5 text-center">Hist.</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoTabla" class="text-sm divide-y divide-slate-50"></tbody>
-                </table>
+            <!-- Categoría -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Categoría</label>
+                <select id="selectClasif" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
+                    <option value="TODOS">Todas</option>
+                    <option value="A+">A+</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
             </div>
         </div>
-    </main>
 
-    <!-- Modal Gráfica -->
-    <div id="modalGrafica" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-blue-900/40 backdrop-blur-md p-4">
-        <div class="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <div class="p-8 bg-slate-50 border-b flex justify-between items-center">
-                <h2 class="text-xl font-black text-educate uppercase tracking-tight">Comparativa de Desempeño Histórico</h2>
-                <button onclick="cerrarModal()" class="text-slate-300 hover:text-red-500 text-3xl font-light">&times;</button>
-            </div>
-            <div class="p-10">
-                <canvas id="chartHistorico" height="120"></canvas>
-                <div class="mt-8 flex justify-between items-center">
-                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Generado por Dirección de Pedagogía</p>
-                    <div class="flex gap-4">
-                        <button onclick="descargarGrafica()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl text-xs font-bold shadow-lg hover:bg-blue-700">📥 Exportar PNG</button>
-                        <button onclick="cerrarModal()" class="bg-slate-100 text-slate-500 px-8 py-3 rounded-2xl text-xs font-bold hover:bg-slate-200">Cerrar</button>
-                    </div>
+        <!-- Buscador general (modo normal) -->
+        <div id="bloqueBusquedaNormal" class="mb-4">
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Buscar Colegio (modo año específico)</label>
+            <input type="text" id="inputBusqueda"
+                   placeholder="Nombre o código DANE..."
+                   class="w-full p-3 border-none bg-slate-100 rounded-xl text-sm">
+        </div>
+
+        <!-- MODO HISTÓRICO: DANE + REPORTE -->
+        <div id="bloqueHistorico" class="mt-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 hidden">
+            <h3 class="text-xs font-bold text-blue-700 uppercase tracking-widest mb-2">
+                Consulta Histórica por DANE (Todos los años)
+            </h3>
+            <p class="text-[11px] text-slate-500 mb-3">
+                En este modo el sistema buscará el colegio por su código DANE y construirá un
+                reporte con todos los colegios de su municipio, mostrando el puesto ocupado y
+                el índice obtenido en cada año disponible.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4 items-end">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Código DANE del Colegio</label>
+                    <input type="text" id="inputDaneHistorico" placeholder="Ej. 311001065489"
+                           class="w-full p-3 border border-blue-100 bg-white rounded-xl text-sm font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        También se puede implementar un buscador por nombre para encontrar el DANE.
+                    </p>
+                </div>
+                <div class="flex flex-col md:items-end gap-2">
+                    <button id="btnGenerarHistorico"
+                            class="w-full md:w-auto bg-educate text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md hover:bg-blue-800">
+                        Generar tabla histórica
+                    </button>
+                    <button id="btnReporteExcel"
+                            class="w-full md:w-auto bg-emerald-500 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md hover:bg-emerald-600 disabled:opacity-40"
+                            disabled>
+                        📥 Reporte Excel
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script>
-        const aniosH = Array.from({length: 12}, (_, i) => 2014 + i);
-        let dataFull = [];
-        let seleccionados = [];
-        let myChart = null;
-
-        const selAnio = document.getElementById('selectAnio');
-        aniosH.slice().reverse().forEach(a => selAnio.innerHTML += `<option value="${a}">${a}</option>`);
-
-        async function cargar() {
-            const a = selAnio.value;
-            try {
-                const r = await fetch(`./data/data_${a}.json`);
-                dataFull = await r.json();
-                llenarSelects();
-                filtrar();
-            } catch (e) { alert("Error cargando datos del año " + a); }
-        }
-
-        function llenarSelects() {
-            const depts = [...new Set(dataFull.map(d => d.departamento))].sort();
-            const sD = document.getElementById('selectDepto');
-            sD.innerHTML = '<option value="TODOS">Todos</option>';
-            depts.forEach(d => sD.innerHTML += `<option value="${d}">${d}</option>`);
-        }
-
-        function filtrar() {
-            const d = document.getElementById('selectDepto').value;
-            const m = document.getElementById('selectMpio').value;
-            const b = document.getElementById('inputBusqueda').value.toLowerCase();
-            const filtered = dataFull.filter(x => (d==='TODOS'||x.departamento===d) && (m==='TODOS'||x.municipio===m) && (x.nombre.toLowerCase().includes(b)||x.cod_dane.includes(b)));
-            dibujar(filtered);
-        }
-
-      function dibujar(data) {
-    const tbody = document.getElementById('cuerpoTabla');
-    tbody.innerHTML = '';
-    
-    // Mostramos los primeros 100 resultados para mantener fluidez
-    data.slice(0, 100).forEach(x => {
-        const isChecked = seleccionados.find(s => s.cod_dane === x.cod_dane);
-        
-        // Formateo de índices con 4 decimales para precisión pedagógica
-        const indT = parseFloat(x.indice_total || 0).toFixed(4);
-        const indM = parseFloat(x["indice de Matemática"] || 0).toFixed(4);
-        const indL = parseFloat(x["indice de Lectura Crítica"] || 0).toFixed(4);
-        const indS = parseFloat(x["indice de Sociales y Ciudadanas"] || 0).toFixed(4);
-        const indC = parseFloat(x["indice de Ciencias Naturales"] || 0).toFixed(4);
-        const indI = parseFloat(x["indice de Inglés"] || 0).toFixed(4);
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
-                <td class="p-5 text-center">
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} 
-                           onchange="toggleSel('${x.cod_dane}', this)" 
-                           class="w-5 h-5 rounded border-slate-300 accent-blue-600 cursor-pointer">
-                </td>
-                <td class="p-5">
-                    <!-- NOMBRE: Más pequeño y en gris para jerarquía secundaria -->
-                    <div class="text-[11px] font-bold text-slate-400 uppercase truncate-school mb-1 leading-tight">
-                        ${x.nombre}
-                    </div>
-                    <!-- DANE Y PUESTO: Más grandes y destacados en azul institucional -->
-                    <div class="text-sm font-black text-educate tracking-tighter uppercase">
-                        DANE: ${x.cod_dane} | PUESTO NAL. #${x.ranking_nacional}
-                    </div>
-                </td>
-                <td class="p-5 text-center font-bold text-slate-500">${x.clasificacion}</td>
-                <td class="p-5 text-center font-numeric font-black bg-blue-50/50 text-blue-700 text-base">${indT}</td>
-                <td class="p-5 text-center font-numeric text-slate-500 text-xs">${x.evaluados_3anios}</td>
-                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indL}</td>
-                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indS}</td>
-                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indC}</td>
-                <td class="p-5 text-center font-numeric text-slate-400 text-xs">${indI}</td>
-                <td class="p-5 text-center">
-                    <button onclick="verHistorial('${x.cod_dane}', '${x.nombre}')" 
-                            class="bg-slate-100 hover:bg-blue-600 hover:text-white p-2 rounded-xl transition-all shadow-sm">
-                        📈
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-     function toggleSel(dane, el) {
-    if(el.checked) {
-        if(seleccionados.length >= 3) {
-            // Mostrar modal de alerta en lugar de alert()
-            document.getElementById('modalAlerta').classList.remove('hidden');
-            el.checked = false;
-            return;
-        }
-        // Buscar el colegio en dataFull y agregarlo a selección
-        const col = dataFull.find(x => x.cod_dane === dane);
-        if(col) seleccionados.push(col);
-    } else {
-        seleccionados = seleccionados.filter(s => s.cod_dane !== dane);
-    }
-    
-    // Actualizar interfaz
-    document.getElementById('countSelected').innerText = seleccionados.length;
-    const btnComp = document.getElementById('btnCompararVarios');
-    btnComp.disabled = seleccionados.length < 2;
-}
-
-function cerrarAlerta() {
-    document.getElementById('modalAlerta').classList.add('hidden');
-}
-        async function abrirComparativa() {
-            document.getElementById('modalGrafica').classList.remove('hidden');
-            const datasets = [];
-            const colores = ['#004aad', '#eab308', '#22c55e'];
-            
-            for(let i=0; i<seleccionados.length; i++) {
-                const col = seleccionados[i];
-                const vals = [];
-                for(let a of aniosH) {
-                    try {
-                        const r = await fetch(`./data/data_${a}.json`);
-                        const d = await r.json();
-                        const found = d.find(x => x.cod_dane === col.cod_dane);
-                        vals.push(found ? parseFloat(found.indice_total) : null);
-                    } catch { vals.push(null); }
-                }
-                datasets.push({ label: col.nombre, data: vals, borderColor: colores[i], tension: 0.3, borderWidth: 4, pointRadius: 5 });
-            }
-            renderChart(datasets);
-        }
-
-        async function verHistorial(dane, nombre) {
-            seleccionados = [dataFull.find(x => x.cod_dane === dane)];
-            abrirComparativa();
-        }
-
-        function renderChart(ds) {
-            const ctx = document.getElementById('chartHistorico').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: aniosH, datasets: ds },
-                options: { 
-                    responsive: true, 
-                    plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } },
-                    scales: { y: { ticks: { font: { family: 'monospace' } } } }
-                }
-            });
-        }
-
-        function cerrarModal() { document.getElementById('modalGrafica').classList.add('hidden'); }
-        function descargarGrafica() {
-            const link = document.createElement('a');
-            link.download = 'Comparativa_Educate.png';
-            link.href = document.getElementById('chartHistorico').toDataURL('image/png');
-            link.click();
-        }
-
-        selAnio.addEventListener('change', cargar);
-        document.getElementById('selectDepto').addEventListener('change', () => {
-            const d = document.getElementById('selectDepto').value;
-            const mpios = [...new Set(dataFull.filter(x => d==='TODOS'||x.departamento===d).map(x => x.municipio))].sort();
-            const sM = document.getElementById('selectMpio');
-            sM.innerHTML = '<option value="TODOS">Todos</option>';
-            mpios.forEach(m => sM.innerHTML += `<option value="${m}">${m}</option>`);
-            filtrar();
-        });
-        document.getElementById('selectMpio').addEventListener('change', filtrar);
-        document.getElementById('inputBusqueda').addEventListener('input', filtrar);
-        window.onload = cargar;
-    </script>
-    <!-- Modal de Alerta Personalizada -->
-<div id="modalAlerta" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-blue-900/40 backdrop-blur-sm p-4">
-    <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div class="p-8 text-center">
-            <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="text-3xl font-bold">!</span>
-            </div>
-            <h3 class="text-xl font-black text-educate mb-2 uppercase">Límite Alcanzado</h3>
-            <p id="mensajeAlerta" class="text-sm text-slate-500 mb-6">Solo puedes comparar hasta 3 instituciones simultáneamente para garantizar la claridad del análisis pedagógico.</p>
-            <button onclick="cerrarAlerta()" class="w-full bg-educate text-white py-3 rounded-xl font-bold text-xs hover:bg-blue-800 transition-colors shadow-lg">
-                ENTENDIDO
-            </button>
+    <!-- TABLA PRINCIPAL (modo normal, año específico) -->
+    <section id="seccionTablaNormal" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b">
+                    <tr>
+                        <th class="p-5 text-center w-12">Sel.</th>
+                        <th class="p-5">Institución Educativa</th>
+                        <th class="p-5 text-center">Cat.</th>
+                        <th class="p-5 text-center bg-blue-50 text-blue-600">Total</th>
+                        <th class="p-5 text-center">Mat</th>
+                        <th class="p-5 text-center">Lect</th>
+                        <th class="p-5 text-center">Soc</th>
+                        <th class="p-5 text-center">Cien</th>
+                        <th class="p-5 text-center">Ing</th>
+                        <th class="p-5 text-center">Hist.</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla" class="text-sm divide-y divide-slate-50">
+                    <!-- Filas dinámicas por JS -->
+                </tbody>
+            </table>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!-- TABLA HISTÓRICA (se mostrará en modo Todos) -->
+    <section id="seccionTablaHistorica" class="mt-6 hidden">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+            <div class="p-4 border-b bg-slate-50">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Histórico municipal por años
+                </h3>
+                <p id="subtituloHistorico" class="text-[11px] text-slate-500">
+                    Municipio: — | Colegio base: — | DANE: —
+                </p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b">
+                    <tr>
+                        <th class="p-3 text-center">Año</th>
+                        <th class="p-3">Colegio</th>
+                        <th class="p-3 text-center">DANE</th>
+                        <th class="p-3 text-center">Cat.</th>
+                        <th class="p-3 text-center">Puesto Mpio</th>
+                        <th class="p-3 text-center">Índice Total</th>
+                        <th class="p-3 text-center">Lect</th>
+                        <th class="p-3 text-center">Mat</th>
+                        <th class="p-3 text-center">Soc</th>
+                        <th class="p-3 text-center">Cien</th>
+                        <th class="p-3 text-center">Ing</th>
+                    </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaHistorica" class="text-xs divide-y divide-slate-50">
+                        <!-- Aquí irán las filas históricas (multi-año, multi-colegio) -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Aquí irá tu bloque <script> con la lógica JS -->
 
 </body>
 </html>
-
-
