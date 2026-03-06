@@ -1,191 +1,368 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Consulta Saber 11 - Dirección de Pedagogía</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .bg-educate { background-color: #004aad; }
-        .text-educate { color: #004aad; }
-        .truncate-school { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .font-numeric { font-family: 'Courier New', monospace; }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-900">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saber 11 · Grupo Edúcate Colombia</title>
 
-<header class="bg-educate text-white p-6 shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-black">Grupo Edúcate Colombia</h1>
-            <p class="text-[10px] tracking-widest opacity-80 uppercase">Dirección de Pedagogía</p>
-        </div>
-        <button id="btnCompararVarios" disabled
-                class="bg-yellow-500 text-blue-900 px-6 py-2 rounded-full font-bold text-xs shadow-md hover:bg-yellow-400">
-            Comparar Selección (<span id="countSelected">0</span>)
-        </button>
+  <!-- Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Estilos corporativos -->
+  <link rel="stylesheet" href="css/educate.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header__inner">
+    <div class="header__brand">
+      <!-- Logo: reemplaza src por /assets/logo-principal.png cuando lo tengas -->
+      <div style="width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">🎓</div>
+      <div class="header__text">
+        <div class="header__name">Grupo Edúcate Colombia</div>
+        <div class="header__sub">Sistema de Consulta · Resultados Saber 11 ICFES</div>
+      </div>
     </div>
+
+    <div class="header__actions">
+      <span id="modoBadge" class="modo-badge modo-badge--normal">⚡ Año específico</span>
+      <button id="btnComparar" class="btn-comparar" disabled>
+        Comparar (<span id="countSelected">0</span>)
+      </button>
+    </div>
+  </div>
 </header>
 
-<main class="container mx-auto p-4 md:p-6">
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════════ -->
+<main class="main">
 
-    <!-- PANEL DE CONSULTA -->
-    <section class="bg-white p-6 rounded-3xl shadow-sm mb-6 border border-slate-100">
-        <h2 class="text-sm font-bold text-slate-500 uppercase mb-4 tracking-widest">Panel de Consulta</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <!-- Año -->
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Año</label>
-                <select id="selectAnio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm font-bold">
-                    <option value="TODOS">Todos</option>
-                    <!-- Años específicos (ejemplo, el JS puede completar) -->
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                    <!-- ... -->
-                    <option value="2014">2014</option>
-                </select>
-                <p class="text-[10px] text-slate-400 mt-1">
-                    Selecciona “Todos” para activar el modo histórico por DANE.
-                </p>
-            </div>
+  <!-- ─── PANEL DE FILTROS ─────────────────────────────────── -->
+  <section class="filtros-panel">
+    <div class="filtros-panel__title">Panel de consulta</div>
 
-            <!-- Departamento -->
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Departamento</label>
-                <select id="selectDepto" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
-                    <option value="TODOS">Todos</option>
-                </select>
-            </div>
+    <div class="filtros-grid">
 
-            <!-- Municipio -->
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Municipio</label>
-                <select id="selectMpio" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
-                    <option value="TODOS">Todos</option>
-                </select>
-            </div>
+      <!-- AÑO -->
+      <div class="filtro-item">
+        <label class="filtro-label" for="selectAnio">Año</label>
+        <div class="filtro-select-wrap">
+          <select id="selectAnio" class="filtro-select">
+            <!-- Se llena dinámicamente en app.js -->
+          </select>
+        </div>
+        <span style="font-size:.6rem;color:var(--gray-400);margin-top:3px">"Todos" activa modo histórico</span>
+      </div>
 
-            <!-- Categoría -->
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Categoría</label>
-                <select id="selectClasif" class="w-full p-2 border-none bg-slate-100 rounded-xl text-sm">
-                    <option value="TODOS">Todas</option>
-                    <option value="A+">A+</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                </select>
+      <!-- DEPARTAMENTO -->
+      <div class="filtro-item">
+        <label class="filtro-label" for="selectDepto">Departamento</label>
+        <div class="filtro-select-wrap">
+          <select id="selectDepto" class="filtro-select">
+            <option value="TODOS">Todos</option>
+            <!-- Se llena dinámicamente -->
+          </select>
+        </div>
+      </div>
+
+      <!-- MUNICIPIO (personalizado) -->
+      <div class="filtro-item">
+        <label class="filtro-label">Municipio</label>
+        <div class="municipio-wrap">
+          <div id="mpioDisplay" class="municipio-input-display">Todos</div>
+          <div id="mpioDropdown" class="municipio-dropdown">
+            <div class="municipio-search">
+              <input type="text" id="mpioSearch" placeholder="Buscar municipio…"/>
             </div>
+            <ul id="mpioList" class="municipio-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORÍA -->
+      <div class="filtro-item">
+        <label class="filtro-label" for="selectClasif">Categoría</label>
+        <div class="filtro-select-wrap">
+          <select id="selectClasif" class="filtro-select">
+            <option value="TODOS">Todas</option>
+            <option value="A+">A+</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+      </div>
+
+    </div><!-- /filtros-grid -->
+
+    <!-- ─── BLOQUE HISTÓRICO (oculto hasta Año = "Todos") ─── -->
+    <div id="bloqueHistorico" class="bloque-historico">
+      <div class="bloque-historico__title">📅 Consulta histórica por municipio</div>
+      <div class="bloque-historico__desc">
+        Ingresa el código DANE o nombre del colegio. El sistema buscará todos los colegios
+        del mismo municipio en cada año disponible y construirá el reporte histórico.
+      </div>
+
+      <div class="bloque-historico__grid">
+
+        <!-- Input DANE con autocomplete -->
+        <div class="autocomplete-wrap">
+          <label class="filtro-label">Código DANE o nombre del colegio</label>
+          <input
+            type="text"
+            id="inputDaneHistorico"
+            class="filtro-input"
+            placeholder="Ej: 311001065489 o nombre del colegio…"
+            autocomplete="off"
+          />
+          <ul id="listaSugerencias" class="autocomplete-list"></ul>
         </div>
 
-        <!-- Buscador general (modo normal) -->
-        <div id="bloqueBusquedaNormal" class="mb-4">
-            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Buscar Colegio (modo año específico)</label>
-            <input type="text" id="inputBusqueda"
-                   placeholder="Nombre o código DANE..."
-                   class="w-full p-3 border-none bg-slate-100 rounded-xl text-sm">
+        <!-- Botón Generar -->
+        <div style="display:flex;flex-direction:column;justify-content:flex-end">
+          <button id="btnGenerarHistorico" class="btn btn--historico">
+            🔍 Generar reporte
+          </button>
         </div>
 
-        <!-- MODO HISTÓRICO: DANE + REPORTE -->
-        <div id="bloqueHistorico" class="mt-4 p-4 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 hidden">
-            <h3 class="text-xs font-bold text-blue-700 uppercase tracking-widest mb-2">
-                Consulta Histórica por DANE (Todos los años)
-            </h3>
-            <p class="text-[11px] text-slate-500 mb-3">
-                En este modo el sistema buscará el colegio por su código DANE y construirá un
-                reporte con todos los colegios de su municipio, mostrando el puesto ocupado y
-                el índice obtenido en cada año disponible.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4 items-end">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Código DANE del Colegio</label>
-                    <input type="text" id="inputDaneHistorico" placeholder="Ej. 311001065489"
-                           class="w-full p-3 border border-blue-100 bg-white rounded-xl text-sm font-mono">
-                    <p class="text-[10px] text-slate-400 mt-1">
-                        También se puede implementar un buscador por nombre para encontrar el DANE.
-                    </p>
-                </div>
-                <div class="flex flex-col md:items-end gap-2">
-                    <button id="btnGenerarHistorico"
-                            class="w-full md:w-auto bg-educate text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md hover:bg-blue-800">
-                        Generar tabla histórica
-                    </button>
-                    <button id="btnReporteExcel"
-                            class="w-full md:w-auto bg-emerald-500 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md hover:bg-emerald-600 disabled:opacity-40"
-                            disabled>
-                        📥 Reporte Excel
-                    </button>
-                </div>
-            </div>
+        <!-- Botón Excel Histórico -->
+        <div style="display:flex;flex-direction:column;justify-content:flex-end">
+          <button id="btnExcelHistorico" class="btn btn--excel" disabled>
+            📥 Reporte Excel
+          </button>
         </div>
-    </section>
 
-    <!-- TABLA PRINCIPAL (modo normal, año específico) -->
-    <section id="seccionTablaNormal" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b">
-                    <tr>
-                        <th class="p-5 text-center w-12">Sel.</th>
-                        <th class="p-5">Institución Educativa</th>
-                        <th class="p-5 text-center">Cat.</th>
-                        <th class="p-5 text-center bg-blue-50 text-blue-600">Total</th>
-                        <th class="p-5 text-center">Mat</th>
-                        <th class="p-5 text-center">Lect</th>
-                        <th class="p-5 text-center">Soc</th>
-                        <th class="p-5 text-center">Cien</th>
-                        <th class="p-5 text-center">Ing</th>
-                        <th class="p-5 text-center">Hist.</th>
-                    </tr>
-                </thead>
-                <tbody id="cuerpoTabla" class="text-sm divide-y divide-slate-50">
-                    <!-- Filas dinámicas por JS -->
-                </tbody>
-            </table>
-        </div>
-    </section>
+      </div>
+    </div><!-- /bloqueHistorico -->
 
-    <!-- TABLA HISTÓRICA (se mostrará en modo Todos) -->
-    <section id="seccionTablaHistorica" class="mt-6 hidden">
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="p-4 border-b bg-slate-50">
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                    Histórico municipal por años
-                </h3>
-                <p id="subtituloHistorico" class="text-[11px] text-slate-500">
-                    Municipio: — | Colegio base: — | DANE: —
-                </p>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b">
-                    <tr>
-                        <th class="p-3 text-center">Año</th>
-                        <th class="p-3">Colegio</th>
-                        <th class="p-3 text-center">DANE</th>
-                        <th class="p-3 text-center">Cat.</th>
-                        <th class="p-3 text-center">Puesto Mpio</th>
-                        <th class="p-3 text-center">Índice Total</th>
-                        <th class="p-3 text-center">Lect</th>
-                        <th class="p-3 text-center">Mat</th>
-                        <th class="p-3 text-center">Soc</th>
-                        <th class="p-3 text-center">Cien</th>
-                        <th class="p-3 text-center">Ing</th>
-                    </tr>
-                    </thead>
-                    <tbody id="cuerpoTablaHistorica" class="text-xs divide-y divide-slate-50">
-                        <!-- Aquí irán las filas históricas (multi-año, multi-colegio) -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+  </section><!-- /filtros-panel -->
+
+  <!-- ─── BUSCADOR PRINCIPAL (modo normal) ─────────────────── -->
+  <div id="bloqueNormal" class="buscador-wrap">
+    <span class="buscador-icon">🔍</span>
+    <input
+      type="text"
+      id="inputBusqueda"
+      class="buscador-input"
+      placeholder="Buscar institución por nombre o código DANE…"
+      autocomplete="off"
+    />
+    <button class="buscador-clear" id="buscadorClear" onclick="limpiarBusqueda()" title="Limpiar">✕</button>
+  </div>
+
+  <!-- ─── BANNER CONTEXTO HISTÓRICO ────────────────────────── -->
+  <div id="ctxBanner" class="ctx-banner">
+    <div>
+      <div class="ctx-banner__title" id="ctxTitulo">—</div>
+      <div class="ctx-banner__sub"   id="ctxSub">—</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN TABLA NORMAL (modo año específico)
+  ════════════════════════════════════════════════════════ -->
+  <section id="seccionTablaNormal" class="tabla-card">
+
+    <!-- Barra info -->
+    <div class="tabla-bar">
+      <span class="stat-pill">📊 <span id="contadorNormal">0 instituciones</span></span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="btnExcelNormal" class="btn btn--excel" style="font-size:.75rem;padding:7px 14px">
+          📥 Exportar Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;text-align:center">Sel.</th>
+            <th>Institución Educativa</th>
+            <th style="text-align:center">Cat.</th>
+            <th class="col-total" style="text-align:center">Índice Total</th>
+            <th style="text-align:center">Evaluados</th>
+            <th style="text-align:center">Lect. Crítica</th>
+            <th style="text-align:center">Matemática</th>
+            <th style="text-align:center">Sociales</th>
+            <th style="text-align:center">Ciencias</th>
+            <th style="text-align:center">Inglés</th>
+            <th style="text-align:center">Tend.</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+      </table>
+    </div>
+
+    <!-- Estados -->
+    <div id="estadoCargando" class="estado-cargando">
+      <div class="spinner"></div>
+      <div class="estado-cargando__title">Cargando datos…</div>
+      <div class="estado-cargando__sub">Por favor espera</div>
+    </div>
+    <div id="estadoVacio" class="estado-vacio">
+      <div class="estado-vacio__icon">🏫</div>
+      <div class="estado-vacio__title">Sin resultados</div>
+      <div class="estado-vacio__sub">Ajusta los filtros o el término de búsqueda</div>
+    </div>
+
+    <!-- Paginación -->
+    <div id="paginacion" class="paginacion"></div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECCIÓN TABLA HISTÓRICA (modo "Todos los años")
+  ════════════════════════════════════════════════════════ -->
+  <section id="seccionTablaHistorica" class="tabla-card hidden">
+
+    <!-- Barra info -->
+    <div class="tabla-bar">
+      <span class="stat-pill">📅 <span id="contadorHistorico">0 registros</span></span>
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:center">Año</th>
+            <th>Municipio</th>
+            <th>Institución Educativa</th>
+            <th style="text-align:center">DANE</th>
+            <th style="text-align:center">Cat.</th>
+            <th style="text-align:center">Sector</th>
+            <th style="text-align:center">Pto. Mpio</th>
+            <th style="text-align:center">Pto. Depto</th>
+            <th style="text-align:center">Pto. Nal</th>
+            <th class="col-total" style="text-align:center">Índice Total</th>
+            <th style="text-align:center">Lectura</th>
+            <th style="text-align:center">Matemática</th>
+            <th style="text-align:center">Sociales</th>
+            <th style="text-align:center">Ciencias</th>
+            <th style="text-align:center">Inglés</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaHistorica"></tbody>
+      </table>
+    </div>
+
+    <!-- Estados -->
+    <div id="estadoCargandoH" class="estado-cargando">
+      <div class="spinner"></div>
+      <div class="estado-cargando__title">Cargando histórico…</div>
+      <div class="estado-cargando__sub">Consultando todos los años disponibles</div>
+    </div>
+    <div id="estadoVacioH" class="estado-vacio">
+      <div class="estado-vacio__icon">📋</div>
+      <div class="estado-vacio__title">Ingresa un DANE para comenzar</div>
+      <div class="estado-vacio__sub">El sistema construirá el reporte histórico del municipio</div>
+    </div>
+
+    <!-- Paginación -->
+    <div id="paginacionHistorica" class="paginacion"></div>
+
+  </section>
 
 </main>
 
-<!-- Aquí irá tu bloque <script> con la lógica JS -->
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: COMPARACIÓN DE COLEGIOS
+════════════════════════════════════════════════════════════ -->
+<div id="modalComparacion" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-header__title">Comparación de Instituciones</div>
+        <div class="modal-header__sub" id="comparNombres"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalComparacion')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Selector de índice -->
+      <div class="indice-selector">
+        <button class="indice-btn active" data-indice="indice_total">Total</button>
+        <button class="indice-btn" data-indice="indice de Matemática">Matemática</button>
+        <button class="indice-btn" data-indice="indice de Lectura Crítica">Lectura</button>
+        <button class="indice-btn" data-indice="indice de Sociales y Ciudadanas">Sociales</button>
+        <button class="indice-btn" data-indice="indice de Ciencias Naturales">Ciencias</button>
+        <button class="indice-btn" data-indice="indice de Inglés">Inglés</button>
+      </div>
+
+      <!-- Gráfica -->
+      <canvas id="chartComparacion" height="200"></canvas>
+
+      <div class="modal-footer">
+        <button id="btnExportarChart" class="btn btn--excel">📥 Exportar JPG</button>
+        <button class="btn btn--ghost" id="btnCerrarModal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: TENDENCIA HISTÓRICA (individual)
+════════════════════════════════════════════════════════════ -->
+<div id="modalTendencia" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-header__title" id="modalTendenciaNombre">—</div>
+        <div class="modal-header__sub"   id="modalTendenciaDane">—</div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalTendencia')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="spinnerTendencia" style="text-align:center;padding:30px 0">
+        <div class="spinner" style="margin:0 auto"></div>
+        <div style="font-size:.8rem;color:var(--gray-400);margin-top:10px">Cargando histórico…</div>
+      </div>
+      <div id="chartTendenciaWrap" class="hidden">
+        <canvas id="chartTendencia" height="150"></canvas>
+      </div>
+      <div class="modal-footer">
+        <button id="btnExportarTendencia" class="btn btn--excel">📥 Exportar JPG</button>
+        <button class="btn btn--ghost" onclick="cerrarModal('modalTendencia')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: ERROR DANE NO ENCONTRADO
+════════════════════════════════════════════════════════════ -->
+<div id="modalError" class="modal-overlay">
+  <div class="modal-box modal-box--sm">
+    <div class="modal-header">
+      <div class="modal-header__title" style="color:var(--color-s200)">⚠️ DANE no encontrado</div>
+      <button class="modal-close" onclick="cerrarModal('modalError')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="modalErrorMsg" style="font-size:.88rem;color:var(--gray-600);line-height:1.6">
+        Este código DANE no aparece en los registros históricos. Verifica el número o el año de creación del colegio.
+      </p>
+      <div class="modal-footer">
+        <button id="btnCerrarError" class="btn btn--primary">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOAST
+════════════════════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+<!-- ─── SCRIPT ──────────────────────────────────────────────── -->
+<script src="js/app.js"></script>
 
 </body>
 </html>
